@@ -49,7 +49,7 @@ list_versions() {
 #########################################
 FORCE=${KERV%%-*}
 
-while getopts ":r:d:fhl" param; do
+while getopts ":r:d:fhlL" param; do
  case $param in
   f) FORCED="yes" ;;
   r) VERSION=${OPTARG} ;;

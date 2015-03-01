@@ -1,5 +1,19 @@
 #!/bin/bash
 PROG="${0##*/}"
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
+DO_RETURN=${SHLVL}
+
+#############################
+
+do_exit()
+{
+        STATUS=${1:-0}
+        REASON=${2}
+
+        [[ -n "${REASON}" ]] && echo "${REASON}"
+
+        [[ ${DO_RETURN} -eq 1 ]] && return $STATUS || exit $STATUS
+}
 
 usage() {
         echo "$PROG -f [-v ###] [-d distro] [-h]"
@@ -8,17 +22,19 @@ usage() {
 	echo -e "\t -f \t force exact revision selected by -v"
 	echo -e "\t -h \t this help"
 
-        exit 1
+        do_exit 1
 }
+
+ROUTE="$(ip -4 route show default scope global)"
+
 
 # non-variable variables
 DISTRO=$(lsb_release -c|cut -f 2 -d:)
 DISTRO=${DISTRO//[	 ]/}
-if [ -r ~/.kernupd ]
-then
-	# Override the current system with the cached version
-	DISTRO=$(cat ~/.kernupd)
-fi
+
+# Override the current system with the cached version
+[[ -r ~/.kernupd ]] && DISTRO=$(cat ~/.kernupd)
+
 SITE="https://launchpad.net/ubuntu/${DISTRO}/+package/linux-firmware"
 KERV=$(dpkg -l linux-firmware | grep ii | awk '{print $3}')
 MACH=$(uname -m)
@@ -26,13 +42,12 @@ ARCH=$(uname -i)
 ARCH=${ARCH//unknown/$MACH}
 ARCH=${ARCH//x86_64/amd64}
 ARCH=${ARCH//i686/i386}
+
 httpproxy=$(apt-config dump 2>&1 | grep Acquire::http::Proxy | cut -f 2 -d\")
 socksproxy=$(apt-config dump 2>&1 | grep  Acquire::socks::Proxy | cut -f 2 -d\")
+
 PROXY="${httpproxy:-$socksproxy}"
-if [ -n "${PROXY}" ]
-then
-	CPROXY="--proxy ${PROXY}"
-fi
+[[ -n "${PROXY}" ]] &&cCPROXY="--proxy ${PROXY}"
 
 #########################################
 FORCE=${KERV%%-*}
@@ -46,7 +61,9 @@ while getopts "v:fh" param; do
  esac
 done 
 
-if [ -n "${FORCED}" ]
+[[ -z "${ROUTE}" ]] && do_exit 1 "No network connection"
+
+if [[ -n "${FORCED}" ]]
 then
 	FORCE=${VERSION}
 	echo "Checking for new firmware v${VERSION} for release ${RELEASE}"
@@ -61,17 +78,15 @@ PAGE=$(curl ${CPROXY} -stderr /dev/null ${SITE} | grep -i "${RELEASE}/${ARCH}/li
 #PAGE="${PAGE##*href=\"}"
 #PAGE="${PAGE%%/\">v*}"
 
-if [ -n "${PAGE}" ]
+if [[ -n "${PAGE}" ]]
 then
 	# curl returns: href="http://launchpadlibrarian.net/152063438/linux-firmware_1.116_all.deb">linux-firmware_1.116_all.deb</a>
         FILES=$(curl ${CPROXY} -stderr /dev/null https://launchpad.net/${PAGE}/ | grep -E "(all|$ARCH).deb" | grep ${FILTER} "${FORCE}" | cut -f 2 -d\" )
 
-        if [ -n "${FILES}" ]
-        then
+        [[ -n "${FILES}" ]] && \
                 for file in ${FILES}
                 do
                 	echo "retrieving ${file}"
                         curl ${CPROXY} --remote-name  ${file}
                 done
-	fi
 fi

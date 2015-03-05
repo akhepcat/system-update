@@ -28,14 +28,6 @@ usage() {
 ROUTE="$(ip -4 route show default scope global)"
 
 
-# non-variable variables
-DISTRO=$(lsb_release -c|cut -f 2 -d:)
-DISTRO=${DISTRO//[	 ]/}
-
-# Override the current system with the cached version
-[[ -r ~/.kernupd ]] && DISTRO=$(cat ~/.kernupd)
-
-SITE="https://launchpad.net/ubuntu/${DISTRO}/+package/linux-firmware"
 KERV=$(dpkg -l linux-firmware | grep ii | awk '{print $3}')
 MACH=$(uname -m)
 ARCH=$(uname -i)
@@ -60,6 +52,15 @@ while getopts "v:fh" param; do
   *) echo "Invalid option detected"; usage ;;
  esac
 done 
+
+# Override the current system with the cached version
+OREL=$(lsb_release -c|cut -f 2 -d:)
+OREL=${OREL//[	 ]/}
+[[ -r ~/.kernupd ]] && LASTREL="$(awk '{print $1}' ~/.kernupd)"
+RELEASE=${LASTREL:-$OREL}
+RELEASE=${DISTRO:-$RELEASE}
+
+SITE="https://launchpad.net/ubuntu/${DISTRO}/+package/linux-firmware"
 
 [[ -z "${ROUTE}" ]] && do_exit 1 "No network connection"
 

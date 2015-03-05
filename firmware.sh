@@ -44,9 +44,10 @@ PROXY="${httpproxy:-$socksproxy}"
 #########################################
 FORCE=${KERV%%-*}
 
-while getopts "v:fh" param; do
+while getopts "v:fhd:" param; do
  case $param in
   f) FORCED="yes" ;;
+  d) DISTRO=${OPTART} ;;
   v) VERSION=${OPTARG} ;;
   h) usage ;;
   *) echo "Invalid option detected"; usage ;;

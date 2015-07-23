@@ -28,12 +28,13 @@ usage() {
 ROUTE="$(ip -4 route show default scope global)"
 
 
-KERV=$(dpkg -l linux-firmware | grep ii | awk '{print $3}')
+KERV=$(dpkg -l linux-firmware firmware-linux | grep ii | awk '{print $3}')
 MACH=$(uname -m)
 ARCH=$(uname -i)
 ARCH=${ARCH//unknown/$MACH}
 ARCH=${ARCH//x86_64/amd64}
 ARCH=${ARCH//i686/i386}
+ARCH=${ARCH//armv6l/armhf}
 
 httpproxy=$(apt-config dump 2>&1 | grep Acquire::http::Proxy | cut -f 2 -d\")
 socksproxy=$(apt-config dump 2>&1 | grep  Acquire::socks::Proxy | cut -f 2 -d\")
@@ -43,6 +44,8 @@ PROXY="${httpproxy:-$socksproxy}"
 
 #########################################
 FORCE=${KERV%%-*}
+VERSION=0
+DISTRO=trusty
 
 while getopts "v:fhd:" param; do
  case $param in
@@ -76,7 +79,7 @@ else
 fi
 
 # curl returns:  <a href="/ubuntu/saucy/amd64/linux-firmware/1.116">
-PAGE=$(curl ${CPROXY} -stderr /dev/null ${SITE} | grep -i "${RELEASE}/${ARCH}/linux-firmware/" | tail -1 | grep -v ${KERV} | cut -f 2 -d\")
+PAGE=$(curl ${CPROXY} -stderr /dev/null ${SITE} | grep -i "${RELEASE}/${ARCH}/linux-firmware/" | tail -1 | grep -v ${KERV:-zzzzzzzzx} | cut -f 2 -d\")
 #PAGE="${PAGE##*href=\"}"
 #PAGE="${PAGE%%/\">v*}"
 

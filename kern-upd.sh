@@ -30,15 +30,15 @@ usage() {
 }
 
 list_distros() {
-	echo "Fetching current list..."
-	curl -s --fail ${CPROXY} ${SITE} 2>&1 | grep -i v3 | sed 's/.*href="v3/v3/g' | cut -f 1 -d \" | sed 's/.*-\([a-z]*\)\/$/\1/' | sort -u
+	echo "Fetching current list of distros..."
+	curl -s --fail ${CPROXY} ${SITE} 2>&1 | grep -i 'v[34]' | sed 's/.*href="\(v[34]\)/\1/g' | cut -f 1 -d \" | sed 's/.*-\([a-z]*\)\/$/\1/' | sort -u
 	do_exit 0
 }
 
 list_versions() {
-	VERSION=$1
-	echo "Fetching current list..."
-	curl -s --fail ${CPROXY} ${SITE} 2>&1 | grep -iE "v[0-9\.]*-${VERSION}" | sed 's/.*href="v3/v3/g' | cut -f 1 -d \" | sed 's/v\(3.*\)-.*\/$/\1/' | sort -u
+	DISTRO=$1
+	echo "Fetching current list of kernels for ${DISTRO}..."
+	curl -s --fail ${CPROXY} ${SITE} 2>&1 | grep -iE "v[0-9\.]*-${DISTRO}" | sed 's/.*href="\(v[34]\)/\1/g' | cut -f 1 -d \" | sed 's/v\([34].*\)-.*\/$/\1/' | sort -u
 	do_exit 0
 }
 

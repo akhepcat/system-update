@@ -50,7 +50,7 @@ DISTRO=trusty
 while getopts "v:fhd:" param; do
  case $param in
   f) FORCED="yes" ;;
-  d) DISTRO=${OPTART} ;;
+  d) DISTRO=${OPTARG} ;;
   v) VERSION=${OPTARG} ;;
   h) usage ;;
   *) echo "Invalid option detected"; usage ;;

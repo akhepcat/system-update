@@ -78,14 +78,22 @@ else
 	FILTER="-v"
 fi
 
+FVER=$(echo ${KERV//./} | rev )
+FVER=$(printf "%06.0f" ${FVER} | rev)
+
 # curl returns:  <a href="/ubuntu/saucy/amd64/linux-firmware/1.116">
 PAGE=$(curl ${CPROXY} -stderr /dev/null ${SITE} | grep -i "${RELEASE}/${ARCH}/linux-firmware/" | tail -1 | grep -v ${KERV:-zzzzzzzzx} | cut -f 2 -d\")
-#PAGE="${PAGE##*href=\"}"
-#PAGE="${PAGE%%/\">v*}"
+
+PGE="${PAGE##*/}"
+PVER=$(echo ${PGE//./} | rev)
+PVER=$(printf "%06.0f" ${PVER} | rev)
+
+test ${FVER:-0} -gt ${PVER:-1} && do_exit 1 "No newer version"
 
 if [[ -n "${PAGE}" ]]
 then
 	# curl returns: href="http://launchpadlibrarian.net/152063438/linux-firmware_1.116_all.deb">linux-firmware_1.116_all.deb</a>
+	# but sometimes                                               linux-firmware_1.127.19_all.deb
         FILES=$(curl ${CPROXY} -stderr /dev/null https://launchpad.net/${PAGE}/ | grep -E "(all|$ARCH).deb" | grep ${FILTER} "${FORCE}" | cut -f 2 -d\" )
 
         [[ -n "${FILES}" ]] && \

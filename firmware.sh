@@ -28,12 +28,13 @@ usage() {
 ROUTE="$(ip -4 route show default scope global)"
 
 
-KERV=$(dpkg -l linux-firmware | grep ii | awk '{print $3}')
+KERV=$(dpkg -l linux-firmware firmware-linux | grep ii | awk '{print $3}')
 MACH=$(uname -m)
 ARCH=$(uname -i)
 ARCH=${ARCH//unknown/$MACH}
 ARCH=${ARCH//x86_64/amd64}
 ARCH=${ARCH//i686/i386}
+ARCH=${ARCH//armv6l/armhf}
 
 httpproxy=$(apt-config dump 2>&1 | grep Acquire::http::Proxy | cut -f 2 -d\")
 socksproxy=$(apt-config dump 2>&1 | grep  Acquire::socks::Proxy | cut -f 2 -d\")
@@ -43,6 +44,8 @@ PROXY="${httpproxy:-$socksproxy}"
 
 #########################################
 FORCE=${KERV%%-*}
+VERSION=0
+DISTRO=trusty
 
 while getopts "v:fhd:" param; do
  case $param in
@@ -75,14 +78,21 @@ else
 	FILTER="-v"
 fi
 
-# curl returns:  <a href="/ubuntu/saucy/amd64/linux-firmware/1.116">
-PAGE=$(curl ${CPROXY} -stderr /dev/null ${SITE} | grep -i "${RELEASE}/${ARCH}/linux-firmware/" | tail -1 | grep -v ${KERV:-ffff} | cut -f 2 -d\")
-#PAGE="${PAGE##*href=\"}"
-#PAGE="${PAGE%%/\">v*}"
+FVER=$(echo ${KERV//./} | rev )
+FVER=$(printf "%06.0f" ${FVER} | rev)
+
+PAGE=$(curl ${CPROXY} -stderr /dev/null ${SITE} | grep -i "${RELEASE}/${ARCH}/linux-firmware/" | tail -1 | grep -v ${KERV:-zzzzzzzzx} | cut -f 2 -d\")
+
+PGE="${PAGE##*/}"
+PVER=$(echo ${PGE//./} | rev)
+PVER=$(printf "%06.0f" ${PVER} | rev)
+
+test ${FVER:-0} -gt ${PVER:-1} && do_exit 1 "No newer version"
 
 if [[ -n "${PAGE}" ]]
 then
 	# curl returns: href="http://launchpadlibrarian.net/152063438/linux-firmware_1.116_all.deb">linux-firmware_1.116_all.deb</a>
+	# but sometimes                                               linux-firmware_1.127.19_all.deb
         FILES=$(curl ${CPROXY} -stderr /dev/null https://launchpad.net/${PAGE}/ | grep -E "(all|$ARCH).deb" | grep ${FILTER} "${FORCE}" | cut -f 2 -d\" )
 
         [[ -n "${FILES}" ]] && \

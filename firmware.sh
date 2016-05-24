@@ -47,7 +47,7 @@ FORCE=${KERV%%-*}
 while getopts "v:fhd:" param; do
  case $param in
   f) FORCED="yes" ;;
-  d) DISTRO=${OPTART} ;;
+  d) DISTRO=${OPTARG} ;;
   v) VERSION=${OPTARG} ;;
   h) usage ;;
   *) echo "Invalid option detected"; usage ;;
@@ -71,12 +71,12 @@ then
 	echo "Checking for new firmware v${VERSION} for release ${RELEASE}"
 	FILTER=""
 else
-	echo "Checking for firmware newer than v${KERV} release ${RELEASE}"
+	echo "Checking for firmware newer than v${KERV:-0} release ${RELEASE}"
 	FILTER="-v"
 fi
 
 # curl returns:  <a href="/ubuntu/saucy/amd64/linux-firmware/1.116">
-PAGE=$(curl ${CPROXY} -stderr /dev/null ${SITE} | grep -i "${RELEASE}/${ARCH}/linux-firmware/" | tail -1 | grep -v ${KERV} | cut -f 2 -d\")
+PAGE=$(curl ${CPROXY} -stderr /dev/null ${SITE} | grep -i "${RELEASE}/${ARCH}/linux-firmware/" | tail -1 | grep -v ${KERV:-ffff} | cut -f 2 -d\")
 #PAGE="${PAGE##*href=\"}"
 #PAGE="${PAGE%%/\">v*}"
 

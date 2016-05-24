@@ -28,7 +28,7 @@ usage() {
 ROUTE="$(ip -4 route show default scope global)"
 
 
-KERV=$(dpkg -l linux-firmware firmware-linux | grep ii | awk '{print $3}')
+KERV=$(dpkg -l linux-firmware firmware-linux 2>&1 | grep ii | awk '{print $3}')
 MACH=$(uname -m)
 ARCH=$(uname -i)
 ARCH=${ARCH//unknown/$MACH}
@@ -45,7 +45,8 @@ PROXY="${httpproxy:-$socksproxy}"
 #########################################
 FORCE=${KERV%%-*}
 VERSION=0
-DISTRO=trusty
+DISTRO=$(lsb_release -c 2>&1 | awk '{print $2}')
+DISTRO=${DISTRO:-trusty}
 
 while getopts "v:fhd:" param; do
  case $param in

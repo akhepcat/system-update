@@ -28,13 +28,14 @@ usage() {
 ROUTE="$(ip -4 route show default scope global)"
 
 
-KERV=$(dpkg -l linux-firmware firmware-linux | grep ii | awk '{print $3}')
+KERV=$(dpkg -l linux-firmware firmware-linux 2>&1 | grep ii | awk '{print $3}')
 MACH=$(uname -m)
 ARCH=$(uname -i)
 ARCH=${ARCH//unknown/$MACH}
 ARCH=${ARCH//x86_64/amd64}
 ARCH=${ARCH//i686/i386}
 ARCH=${ARCH//armv6l/armhf}
+ARCH=${ARCH//aarch64/arm64}
 
 httpproxy=$(apt-config dump 2>&1 | grep Acquire::http::Proxy | cut -f 2 -d\")
 socksproxy=$(apt-config dump 2>&1 | grep  Acquire::socks::Proxy | cut -f 2 -d\")
@@ -45,7 +46,8 @@ PROXY="${httpproxy:-$socksproxy}"
 #########################################
 FORCE=${KERV%%-*}
 VERSION=0
-DISTRO=trusty
+DISTRO=$(lsb_release -c 2>&1 | awk '{print $2}')
+DISTRO=${DISTRO:-trusty}	# defaults are horrible, though
 
 while getopts "v:fhd:" param; do
  case $param in
@@ -74,7 +76,7 @@ then
 	echo "Checking for new firmware v${VERSION} for release ${RELEASE}"
 	FILTER=""
 else
-	echo "Checking for firmware newer than v${KERV} release ${RELEASE}"
+	echo "Checking for firmware newer than v${KERV:-$VERSION} release ${RELEASE}"
 	FILTER="-v"
 fi
 
@@ -94,7 +96,8 @@ if [[ -n "${PAGE}" ]]
 then
 	# curl returns: href="http://launchpadlibrarian.net/152063438/linux-firmware_1.116_all.deb">linux-firmware_1.116_all.deb</a>
 	# but sometimes                                               linux-firmware_1.127.19_all.deb
-        FILES=$(curl ${CPROXY} -stderr /dev/null https://launchpad.net/${PAGE}/ | grep -E "(all|$ARCH).deb" | grep ${FILTER} "${FORCE}" | cut -f 2 -d\" )
+	#                                                             linux-firmware_1.157_all.deb
+        FILES=$(curl ${CPROXY} -stderr /dev/null https://launchpad.net/${PAGE}/ | grep -E "(all|$ARCH).deb" | grep ${FILTER} "${FORCE:-zzzzzzzzx}" | cut -f 2 -d\" )
 
         [[ -n "${FILES}" ]] && \
                 for file in ${FILES}

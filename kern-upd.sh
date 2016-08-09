@@ -141,7 +141,7 @@ if [[ -n "${PAGE}" ]]
 then
         FILEPAGE=${SITE}${PAGE}
 	[[ ${DEBUG:-0} -eq 1 ]] && echo "loading file list for ${RELEASE}"
-        FILES=$(curl ${CPROXY} -stderr /dev/null ${FILEPAGE}/ | grep -E "(all|$ARCH).deb" | grep -v "virtual" | grep ${FILTER} "${FORCE}" | grep ${LATENCY} | sed 's/<tr>.*href="//g; s/">.*$//g;' )
+        FILES=$(curl ${CPROXY} -stderr /dev/null ${FILEPAGE}/ | grep -E "(all|$ARCH)\.deb.*</td>" | grep -v "virtual" | grep ${FILTER} "${FORCE}" | grep ${LATENCY} | sed 's/<tr>.*href="//g; s/">.*$//g;' )
 
         [[ -n "${FILES}" ]] && \
                 for file in ${FILES}

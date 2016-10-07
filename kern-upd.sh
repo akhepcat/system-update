@@ -78,6 +78,8 @@ ARCH=$(uname -i)
 ARCH=${ARCH//unknown/$MACH}
 ARCH=${ARCH//x86_64/amd64}
 ARCH=${ARCH//i686/i386}
+ARCH=${ARCH//armv6l/armhf}
+ARCH=${ARCH//aarch64/arm64}
 LATENCY="-vi lowlatency"
 
 httpproxy=$(apt-config dump 2>&1 | grep Acquire::http::Proxy | cut -f 2 -d\")

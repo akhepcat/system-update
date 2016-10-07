@@ -46,8 +46,6 @@ PROXY="${httpproxy:-$socksproxy}"
 #########################################
 FORCE=${KERV%%-*}
 VERSION=0
-DISTRO=$(lsb_release -c 2>&1 | awk '{print $2}')
-DISTRO=${DISTRO:-trusty}	# defaults are horrible, though
 
 while getopts "v:fhd:" param; do
  case $param in

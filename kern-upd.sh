@@ -24,6 +24,8 @@ usage() {
 	echo -e "\t -L \t list available distros"
 	echo -e "\t -l \t list available versions"
 	echo -e "\t -D \t debug what would be done"
+	echo -e "\t -3 \t force i386 (32-bit) mode"
+	echo -e "\t -6 \t force amd64 (64-bit) mode"
 	echo -e "\t -h \t this help"
 
 	do_exit 1
@@ -76,6 +78,8 @@ ARCH=$(uname -i)
 ARCH=${ARCH//unknown/$MACH}
 ARCH=${ARCH//x86_64/amd64}
 ARCH=${ARCH//i686/i386}
+ARCH=${ARCH//armv6l/armhf}
+ARCH=${ARCH//aarch64/arm64}
 LATENCY="-vi lowlatency"
 
 httpproxy=$(apt-config dump 2>&1 | grep Acquire::http::Proxy | cut -f 2 -d\")
@@ -85,7 +89,7 @@ PROXY="${httpproxy:-$socksproxy}"
 
 #########################################
 
-while getopts ":r:d:fhlcDL" param; do
+while getopts ":r:d:fhlcDL36" param; do
  case $param in
   f) FORCED=1 ;;
   r) VERSION=${OPTARG} ;;
@@ -95,6 +99,8 @@ while getopts ":r:d:fhlcDL" param; do
   l) DO_LIST_VERSIONS=1 ;;
   L) DO_LIST_DISTROS=1 ;;
   D) DEBUG=1 ;;
+  3) ARCH="i386" ;;
+  6) ARCH="amd64" ;;
   *) echo "Invalid option detected"; usage ;;
  esac
 done 

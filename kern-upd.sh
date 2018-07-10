@@ -23,6 +23,7 @@ usage() {
 	echo -e "\t -c \t try to continue/resume aborted downloads"
 	echo -e "\t -L \t list available distros"
 	echo -e "\t -l \t list available versions"
+	echo -e "\t -R \t allow release-candidate versions"
 	echo -e "\t -D \t debug what would be done"
 	echo -e "\t -3 \t force i386 (32-bit) mode"
 	echo -e "\t -6 \t force amd64 (64-bit) mode"
@@ -53,14 +54,30 @@ distro_version() {
 	LASTREL="$(test -e ~/.kernupd && awk '{print $1}' ~/.kernupd)"
 	RELEASE=${LASTREL:-$OREL}
 	RELEASE=${DISTRO:-$RELEASE}
-
 	CURR=${VERSION:-$KERV}
+
+#+ CURR=4.18-rc4
+#+ CURR=4.18
+#+ MAJ=4
+#+ MIN=4
+#+ MIN=4
+#+ SUB=18
+#+ MAJ=4
+#+ MIN=4
+#+ SUB=18
 	CURR=${CURR%%-*}
+	DOTS=${CURR//[0-9]/}
 	MAJ=${CURR%%.*}
-	MIN=${CURR%.*}
-	MIN=${MIN#*.}
-	SUB=${CURR##*.}
-	MAJ=${MAJ:-3}
+	if [ ${#DOTS} -gt 1 ]
+	then
+		MIN=${CURR%.*}
+		MIN=${MIN#*.}
+		SUB=${CURR##*.}
+	else
+		MIN=${CURR#*.}
+		SUB="0"
+	fi
+	MAJ=${MAJ:-4}
 	MIN=${MIN:-0}
 	SUB=${SUB:-0}
 }
@@ -89,11 +106,12 @@ PROXY="${httpproxy:-$socksproxy}"
 
 #########################################
 
-while getopts ":r:d:fhlcDL36" param; do
+while getopts ":r:d:fhlcRDL36" param; do
  case $param in
   f) FORCED=1 ;;
   r) VERSION=${OPTARG} ;;
   d) DISTRO=${OPTARG} ;;
+  R) RCOK="RC" ;;
   c) CONTINUE=1 ;;
   h) usage ;;
   l) DO_LIST_VERSIONS=1 ;;
@@ -125,15 +143,18 @@ else
 	FILTER="-v"
 fi
 
+RCOK=${RCOK:-rc}
+
 #  PAGE=$(curl ${CPROXY} -stderr /dev/null ${SITE} | grep "v${MAJ}\.${MIN}" | grep -v -- '-rc' | grep ${FILTER} "v${MAJ}\.${MIN}\.${SUB}" | tail -1 | grep -i ${RELEASE} )
 [[ ${DEBUG:-0} -eq 1 ]] && echo "fetching index for  ${RELEASE}"
-PAGE=$(curl ${CPROXY} -stderr /dev/null ${SITE} | grep "v${MAJ}\.${MIN}" | grep -v -- '-rc' | \
+PAGE=$(curl ${CPROXY} -stderr /dev/null ${SITE} | grep "v${MAJ}\.${MIN}" | grep -v -- "-${RCOK}" | \
         grep -E ${FILTER} "v${MAJ}\.${MIN}(-${RELEASE}|\.${SUB})" | sed 's/.*href/href/g' | sort -k 5 -t\> | tail -1 | grep -i ${RELEASE} )
 PAGE="${PAGE##*href=\"}"
 PAGE="${PAGE%%/\">v*}"
 
 NPAGE=${PAGE//-$RELEASE/}
 NSUB=${NPAGE##*.}
+NSUB=${NSUB%%-*}
 NSUB=${NSUB:-0}
 
 # bail out if we're newer than the remote
@@ -147,7 +168,7 @@ if [[ -n "${PAGE}" ]]
 then
         FILEPAGE=${SITE}${PAGE}
 	[[ ${DEBUG:-0} -eq 1 ]] && echo "loading file list for ${RELEASE}"
-        FILES=$(curl ${CPROXY} -stderr /dev/null ${FILEPAGE}/ | grep -E "(all|$ARCH)\.deb.*</td>" | grep -v "virtual" | grep ${FILTER} "${FORCE}" | grep ${LATENCY} | sed 's/<tr>.*href="//g; s/">.*$//g;' )
+        FILES=$(curl ${CPROXY} -stderr /dev/null ${FILEPAGE}/ | grep -E "(all|$ARCH)\.deb.*</td>" | grep -v "virtual" | grep ${FILTER} "${FORCE//-/.*}" | grep ${LATENCY} | sed 's/<tr>.*href="//g; s/">.*$//g;' )
 
         [[ -n "${FILES}" ]] && \
                 for file in ${FILES}

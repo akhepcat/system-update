@@ -41,7 +41,13 @@ list_distros() {
 list_versions() {
 	DISTRO=$1
 	echo "Fetching current list of kernels for ${DISTRO}..."
-	curl -s --fail ${CPROXY} ${SITE} 2>&1 | grep -iE "v[0-9\.]*-${DISTRO}" | sed 's/.*href="\(v[34]\)/\1/g' | cut -f 1 -d \" | sed 's/v\([34].*\)-.*\/$/\1/' | sort -u
+	if [ -n "${RCOK}" ]
+	then
+		RCYN=SHOWRC
+	else
+		RCYN=""
+	fi
+	curl -s --fail ${CPROXY} ${SITE} 2>&1 | grep -iE "v[0-9\.]*-${DISTRO}" | sed 's/.*href="\(v[34]\)/\1/g' | cut -f 1 -d \" | sed "s/v\([34].*\)-${RCYN}.*\/$/\1/" | grep "${VERSION:-.}" | sort -u
 	do_exit 0
 }
 

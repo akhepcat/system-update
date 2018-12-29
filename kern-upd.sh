@@ -92,7 +92,7 @@ distro_version() {
 
 # non-variable variables
 ROUTE="$(ip -4 route show default scope global)"
-SITE="http://kernel.ubuntu.com/~kernel-ppa/mainline/"
+SITE="https://kernel.ubuntu.com/~kernel-ppa/mainline/"
 
 KERV=$(uname -r)
 FORCE=${KERV%%-*}
@@ -154,7 +154,7 @@ RCOK=${RCOK:-rc}
 #  PAGE=$(curl ${CPROXY} -stderr /dev/null ${SITE} | grep "v${MAJ}\.${MIN}" | grep -v -- '-rc' | grep ${FILTER} "v${MAJ}\.${MIN}\.${SUB}" | tail -1 | grep -i ${RELEASE} )
 [[ ${DEBUG:-0} -eq 1 ]] && echo "fetching index for  ${RELEASE}"
 PAGE=$(curl ${CPROXY} -stderr /dev/null ${SITE} | grep "v${MAJ}\.${MIN}" | grep -v -- "-${RCOK}" | \
-        grep -E ${FILTER} "v${MAJ}\.${MIN}(-${RELEASE}|\.${SUB})" | sed 's/.*href/href/g' | sort -k 5 -t\> | tail -1 | grep -i ${RELEASE} )
+        grep -E ${FILTER} "v${MAJ}\.${MIN}(-${RELEASE}|\.${SUB}|/)" | sed 's/.*href/href/g' | sort -k 5 -t\> | tail -1 | grep -i ${RELEASE} )
 PAGE="${PAGE##*href=\"}"
 PAGE="${PAGE%%/\">v*}"
 

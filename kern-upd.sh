@@ -34,7 +34,7 @@ usage() {
 
 list_distros() {
 	echo "Fetching current list of distros..."
-	curl -s --fail ${CPROXY} ${SITE} 2>&1 | grep -i 'v[34]' | sed 's/.*href="\(v[34]\)/\1/g' | cut -f 1 -d \" | sed 's/.*-\([a-z]*\)\/$/\1/' | sort -u
+	curl -s --fail ${CPROXY} ${SITE} 2>&1 | grep -i 'v[345]' | sed 's/.*href="\(v[345]\)/\1/g' | cut -f 1 -d \" | sed 's/.*-\([a-z]*\)\/$/\1/' | sort -u
 	do_exit 0
 }
 
@@ -47,7 +47,7 @@ list_versions() {
 	else
 		RCYN=""
 	fi
-	curl -s --fail ${CPROXY} ${SITE} 2>&1 | grep -iE "v[0-9\.]*-${DISTRO}" | sed 's/.*href="\(v[34]\)/\1/g' | cut -f 1 -d \" | sed "s/v\([34].*\)-${RCYN}.*\/$/\1/" | grep "${VERSION:-.}" | sort -u
+	curl -s --fail ${CPROXY} ${SITE} 2>&1 | grep -iE "v[0-9\.]*-${DISTRO}" | sed 's/.*href="\(v[345]\)/\1/g' | cut -f 1 -d \" | sed "s/v\([345].*\)-${RCYN}.*\/$/\1/" | grep "${VERSION:-.}" | sort -u
 	do_exit 0
 }
 
@@ -83,7 +83,7 @@ distro_version() {
 		MIN=${CURR#*.}
 		SUB="0"
 	fi
-	MAJ=${MAJ:-4}
+	MAJ=${MAJ:-5}
 	MIN=${MIN:-0}
 	SUB=${SUB:-0}
 }
